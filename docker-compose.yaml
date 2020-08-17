@@ -1,0 +1,33 @@
+version: '3'
+services:
+  postgresql:
+    image: postgres:12.4
+    container_name: postgresql
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: mlflow-db
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    hostname: postgresql
+    restart: always
+    volumes:
+     - "./postgres_data/data:/var/lib/postgresql/data"
+
+  mlflow:
+    build: .
+    container_name: mlflow
+    expose:
+      - 8080
+      - 443
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgresql
+    volumes:
+     - "./mlflow_data/:/mlflow"
+    environment:
+      DB_URI: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgresql:5432/mlflow-db
+      VIRTUAL_PORT: 8080
+      ARTIFACT_PATH: /mlflow
